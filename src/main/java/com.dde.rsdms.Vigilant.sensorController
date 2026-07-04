@@ -1,0 +1,125 @@
+package com.dde.rsdms.Vigiliant.sensorController;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.util.List;
+
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import com.dde.rsdms.Vigilant.sensorService.SubscriptionService;
+import com.dde.rsdms.VigilantIQ.sensorsModel.Subscription;
+
+@Controller
+public class SubscriptionController {
+    @Autowired
+	private DataSource datasource;
+    @Autowired
+    private SubscriptionService subscriptionService;
+
+    @GetMapping("/subscriptions")
+    public String showForm(Model model) {
+
+      model.addAttribute("subscription", new Subscription());
+
+        model.addAttribute("owners",
+                subscriptionService.getAllOwnerNames());
+
+        model.addAttribute("list",
+                subscriptionService.getAllSubscriptions());
+
+        return "sensorSubscription";
+        
+    }
+    @GetMapping("/item")
+    public String showItem() {
+		return "hello";
+    	
+    }
+    @GetMapping("/chck")
+    public String showchck() {
+    	return "chck";
+    	
+    }
+    
+    @PostMapping("/savesubscription")
+    public String saveform(@ModelAttribute Subscription subscription) {
+
+        System.out.println(subscription.getOwnerName());
+
+        try {
+
+            Connection con = datasource.getConnection();
+
+            String sql = "INSERT INTO subscription (owner_name,datalogger_qty,sensor_qty,frequency,start_date,end_date,deadline) VALUES (?,?,?,?,?,?,?)";
+            
+            PreparedStatement ps = con.prepareStatement(sql);
+            
+            ps.setString(1, subscription.getOwnerName());
+            ps.setString(2, subscription.getDataloggerQty());
+            ps.setString(3, subscription.getSensorQty());
+            ps.setString(4, subscription.getFrequency());
+            
+            ps.setDate(5,
+                    java.sql.Date.valueOf(subscription.getStartDate()));
+
+            ps.setDate(6,
+                    java.sql.Date.valueOf(subscription.getEndDate()));
+
+            ps.setString(7, subscription.getDeadline());
+
+            ps.executeUpdate();
+
+            ps.close();
+            con.close();
+
+            System.out.println("Inserted");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return "redirect:/subscriptions?success=true";
+        
+    }
+    
+    @GetMapping("/delete/{id}")
+    public String deleteSubscription(@PathVariable int id) {
+
+        try {
+
+            Connection con = datasource.getConnection();
+
+            String sql = "DELETE FROM subscription WHERE id=?";
+
+            PreparedStatement ps = con.prepareStatement(sql);
+
+            ps.setInt(1, id);
+
+            ps.executeUpdate();
+
+            ps.close();
+            con.close();
+
+            System.out.println("Data Deleted Successfully");
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+        
+        return "redirect:/subscriptions?deleted=true";
+    }
+    
+    @GetMapping("/sensorSubscription")
+    public String showList(Model model) {
+        List<Subscription> list = subscriptionService.getAllSubscriptions();
+        model.addAttribute("subscription", list);
+        return "result";
+    }
+}
+   
