@@ -1,0 +1,37 @@
+
+  package com.dde.rsdms.Vigilant.SubscriptionController; import
+  org.springframework.beans.factory.annotation.Autowired; import
+  org.springframework.stereotype.Controller; import
+  org.springframework.ui.Model; import
+  org.springframework.web.bind.annotation.GetMapping; import
+  org.springframework.web.bind.annotation.ModelAttribute; import
+  org.springframework.web.bind.annotation.PostMapping; import
+  com.dde.rsdms.Vigilant.SubscriptionService.SubscriptionService; import
+  com.dde.rsdms.Vigilant.sensorSubscriptionDto.SubscriptionDto;
+  
+  @Controller public class SubscriptionController {
+  
+  @Autowired private SubscriptionService subscriptionService;
+  
+  
+  // PAGE OPEN
+  
+  @GetMapping("/subscriptionss") public String showForm(Model model) {
+  
+  model.addAttribute( "subscription", new SubscriptionDto());
+  
+  model.addAttribute( "owners", subscriptionService.getAllOwnerNames());
+  
+  model.addAttribute( "list", subscriptionService.getAllSubscriptions());
+  
+  return "sensorSubscription"; }
+  
+  
+  @PostMapping("/save")
+  public String saveForm( @ModelAttribute SubscriptionDto
+  dto) {
+  
+  subscriptionService.saveSubscription(dto);
+  
+  return "redirect:/subscriptions"; } }
+ 
