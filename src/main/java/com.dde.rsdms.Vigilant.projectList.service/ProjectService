@@ -1,0 +1,163 @@
+package com.dde.rsdms.Vigilant.projectList.service;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.dde.rsdms.Vigilant.projectList.model.ProjectList;
+import com.dde.rsdms.VigilantIQ.configuration.entities.OwnerMaster;
+
+@Service
+public class ProjectService {
+	 @Autowired
+	    private DataSource datasource;
+
+	   
+	    public List<ProjectList> getAllProject() {
+
+	        List<ProjectList> list = new ArrayList<>();
+
+	        try {
+	            Connection con = datasource.getConnection();
+
+	            String sql = "select * from projectmaster";
+	            PreparedStatement ps = con.prepareStatement(sql);
+
+	            ResultSet rs = ps.executeQuery();
+
+	            while (rs.next()) {
+	                ProjectList pl = new ProjectList();
+
+	                pl.setProjectCode(rs.getInt("projectcode"));
+	                pl.setProjectName(rs.getString("projectname"));
+	                pl.setProjectLocation(rs.getString("projectlocation"));
+	                pl.setProjectDescription(rs.getString("projectdescription"));
+	                pl.setOpeningLattitude(rs.getString("openinglattitude"));
+	                pl.setOpeningLongitude(rs.getString("openinglongitude"));
+	                pl.setOwnerCode(rs.getInt("ownercode"));
+	             
+
+	                list.add(pl);
+	            }
+
+	            rs.close();
+	            ps.close();
+	            con.close();
+
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+
+	        return list;
+	    }
+	    public List<ProjectList> getProjectByPage(int offset, int pageSize) {
+
+	        List<ProjectList> list = new ArrayList<>();
+
+	        try {
+	            Connection con = datasource.getConnection();
+
+	            String sql =
+	            "select * from projectmaster " +
+	            "order by projectcode asc " +
+	            "limit ? offset ?";
+
+	            PreparedStatement ps =
+	            con.prepareStatement(sql);
+
+	            ps.setInt(1, pageSize);
+	            ps.setInt(2, offset);
+
+	            ResultSet rs = ps.executeQuery();
+
+	            while (rs.next()) {
+
+	                ProjectList pl = new ProjectList();
+
+	                pl.setProjectCode(rs.getInt("projectcode"));
+	                pl.setProjectName(rs.getString("projectname"));
+	                pl.setProjectLocation(rs.getString("projectlocation"));
+	                pl.setProjectDescription(rs.getString("projectdescription"));
+	                pl.setOpeningLattitude(rs.getString("openinglattitude"));
+	                pl.setOpeningLongitude(rs.getString("openinglongitude"));
+	                pl.setOwnerCode(rs.getInt("ownercode"));
+
+	                list.add(pl);
+	            }
+
+	            rs.close();
+	            ps.close();
+	            con.close();
+
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+
+	        return list;
+	    }
+	    public int getTotalRecords() {
+
+	        int count = 0;
+
+	        try {
+	            Connection con = datasource.getConnection();
+
+	            String sql = "select count(*) from projectmaster";
+	            PreparedStatement ps = con.prepareStatement(sql);
+
+	            ResultSet rs = ps.executeQuery();
+
+	            if (rs.next()) {
+	                count = rs.getInt(1);
+	            }
+
+	            rs.close();
+	            ps.close();
+	            con.close();
+
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+
+	        return count;
+	    }
+	    public List<OwnerMaster> getAllOwnerNames() {
+
+	        List<OwnerMaster> ownerList = new ArrayList<>();
+
+	        try {
+	            Connection con = datasource.getConnection();
+
+	            String sql = "SELECT ownercode, ownername FROM projectownersmaster ORDER BY ownername ASC";
+	            PreparedStatement ps = con.prepareStatement(sql);
+
+	            ResultSet rs = ps.executeQuery();
+
+	            while (rs.next()) {
+
+	                OwnerMaster owner = new OwnerMaster();
+
+	                owner.setOwnercode(rs.getInt("ownercode"));
+	                owner.setOwnername(rs.getString("ownername"));
+
+	                ownerList.add(owner);
+	            }
+
+	            rs.close();
+	            ps.close();
+	            con.close();
+
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+
+	        return ownerList;
+	    }
+}
