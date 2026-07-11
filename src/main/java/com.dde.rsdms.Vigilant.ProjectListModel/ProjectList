@@ -1,0 +1,80 @@
+package com.dde.rsdms.Vigilant.projectList.model;
+
+import javax.persistence.Entity;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "projectmaster")
+public class ProjectList {
+private Integer projectCode;
+private String projectName;
+private String projectLocation;
+private String projectDescription;
+private String openingLattitude;
+private  String openingLongitude;
+private Integer ownerCode;
+private String ownerName;
+
+public ProjectList() {};
+
+public Integer getProjectCode() {
+	return projectCode;
+}
+public void setProjectCode(Integer projectCode) {
+	this.projectCode=projectCode;
+}
+public String getProjectName() {
+	return projectName;
+}
+public void setProjectName( String projectName) {
+	this.projectName=projectName;
+}
+
+public String getProjectLocation() {
+	return projectLocation;
+}
+
+public void setProjectLocation(String projectLocation) {
+	this.projectLocation = projectLocation;
+}
+
+public String getProjectDescription() {
+	return projectDescription;
+}
+
+public void setProjectDescription( String projectDescription) {
+	this.projectDescription = projectDescription;
+}
+
+public String getOpeningLattitude() {
+	return openingLattitude;
+}
+
+public void setOpeningLattitude(String openingLattitude) {
+	this.openingLattitude = openingLattitude;
+}
+
+public String getOpeningLongitude() {
+	return openingLongitude;
+}
+
+public void setOpeningLongitude(String openingLongitude) {
+	this.openingLongitude = openingLongitude;
+}
+
+public Integer getOwnerCode() {
+	return ownerCode;
+}
+
+public void setOwnerCode(Integer ownerCode) {
+	this.ownerCode = ownerCode;
+}
+public String getOwnerName() {
+	return ownerName;
+}
+public void setOwnerName(String ownerName) {
+	this.ownerName=ownerName;
+}
+
+
+}
