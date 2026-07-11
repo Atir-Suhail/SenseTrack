@@ -1,0 +1,130 @@
+
+  package com.dde.rsdms.Vigilant.SubscriptionDao; import java.sql.Connection;
+  import java.sql.PreparedStatement;
+  
+  import javax.sql.DataSource;
+  
+  import org.springframework.beans.factory.annotation.Autowired; import
+  org.springframework.stereotype.Repository;
+  
+  import java.sql.ResultSet; import java.util.ArrayList; import java.util.List;
+  
+  import com.dde.rsdms.Vigilant.sensorSubscriptionDto.SubscriptionDto; import
+  com.dde.rsdms.VigilantIQ.configuration.entities.OwnerMaster;
+  
+  @Repository public class SubscriptionDao {
+  
+  @Autowired private DataSource datasource;
+  
+  public void saveSubscription(SubscriptionDto dto) {
+  
+  try {
+  
+  Connection con = datasource.getConnection();
+  
+  String sql = "INSERT INTO subscription " +
+  "(owner_name,datalogger_qty,sensor_qty," +
+  "frequency,start_date,end_date,deadline) " + "VALUES (?,?,?,?,?,?,?)";
+  
+  PreparedStatement ps = con.prepareStatement(sql);
+  
+  ps.setString(1, dto.getOwnerName());
+  
+  ps.setString(2, dto.getDataloggerQty());
+  
+  ps.setString(3, dto.getSensorQty());
+  
+  ps.setString(4, dto.getFrequency());
+  
+  ps.setDate(5, java.sql.Date.valueOf(dto.getStartDate()));
+  
+  ps.setDate(6, java.sql.Date.valueOf(dto.getEndDate()));
+  
+  ps.setString(7, dto.getDeadline());
+  
+  ps.executeUpdate();
+  
+  ps.close();
+  
+  con.close();
+  
+  } catch(Exception e){
+  
+  e.printStackTrace(); } }
+  
+  
+  public List<OwnerMaster> getAllOwnerNames(){
+  
+  List<OwnerMaster> ownerList = new ArrayList<>();
+  
+  try{
+  
+  Connection con = datasource.getConnection();
+  
+  String sql = "SELECT ownercode, ownername " + "FROM projectownersmaster " +
+  "ORDER BY ownername ASC";
+  
+  PreparedStatement ps = con.prepareStatement(sql);
+  
+  ResultSet rs = ps.executeQuery();
+  
+  while(rs.next()){
+  
+  OwnerMaster owner = new OwnerMaster();
+  
+  owner.setOwnercode( rs.getInt("ownercode"));
+  
+  owner.setOwnername( rs.getString("ownername"));
+  
+  ownerList.add(owner); }
+  
+  rs.close(); ps.close(); con.close();
+  
+  }catch(Exception e){
+  
+  e.printStackTrace(); }
+  
+  return ownerList; }
+  
+  public List<SubscriptionDto> getAllSubscriptions(){
+  
+  List<SubscriptionDto> list = new ArrayList<>();
+  
+  try{
+  
+  Connection con = datasource.getConnection();
+  
+  String sql = "select * from subscription";
+  
+  PreparedStatement ps = con.prepareStatement(sql);
+  
+  ResultSet rs = ps.executeQuery();
+  
+  while(rs.next()){
+  
+  SubscriptionDto dto = new SubscriptionDto();
+  
+  dto.setOwnerName( rs.getString("owner_name"));
+  
+  dto.setDataloggerQty( rs.getString("datalogger_qty"));
+  
+  dto.setSensorQty( rs.getString("sensor_qty"));
+  
+  dto.setFrequency( rs.getString("frequency"));
+  
+  dto.setStartDate( rs.getDate("start_date") .toLocalDate());
+  
+  dto.setEndDate( rs.getDate("end_date") .toLocalDate());
+  
+  dto.setDeadline( rs.getString("deadline"));
+  
+  list.add(dto); }
+  
+  rs.close(); ps.close(); con.close();
+  
+  }catch(Exception e){
+  
+  e.printStackTrace(); }
+  
+  return list; } }
+ 
