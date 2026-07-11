@@ -1,0 +1,280 @@
+package com.dde.rsdms.Vigilant.projectList.controller;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.dde.rsdms.Vigilant.projectList.model.ProjectList;
+import com.dde.rsdms.Vigilant.projectList.service.ProjectService;
+import com.dde.rsdms.VigilantIQ.configuration.entities.OwnerMaster;
+
+@Controller
+public class projectlistController {
+	
+	 @Autowired
+	    private DataSource datasource;
+	 @Autowired
+	    private ProjectService projectService;
+	
+	
+	 @GetMapping("/addproject")
+	    public String showform(Model model) {
+		 List<OwnerMaster> owners = projectService.getAllOwnerNames();
+
+		    model.addAttribute("owners", owners);
+	        model.addAttribute("addproject", new ProjectList());
+	        return "addProject";
+	    }
+	 @GetMapping("/projectList")
+	 public String projectList(
+	         @RequestParam(defaultValue = "1") int page,
+	         Model model) {
+
+	     int pageSize = 10;
+	     int offset = (page - 1) * pageSize;
+
+	     List<ProjectList> list = projectService.getProjectByPage(offset, pageSize);
+         
+	     List<OwnerMaster> owners = projectService.getAllOwnerNames();
+         
+	     Map<Integer, String> ownerMap = new HashMap<>();
+
+	     for (OwnerMaster o : owners) {
+	         ownerMap.put(o.getOwnercode(), o.getOwnername());
+	     }
+
+	     int totalRecords = projectService.getTotalRecords();
+	     int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
+	     int start = (page - 1) * pageSize + 1;
+	     int end = Math.min(page * pageSize, totalRecords);
+	     model.addAttribute("addproject", list);
+	     model.addAttribute("ownerMap", ownerMap);
+
+	     model.addAttribute("currentPage", page);
+	     model.addAttribute("totalPages", totalPages);
+	     model.addAttribute("startEntry", start);
+	     model.addAttribute("endEntry", end);
+	     model.addAttribute("totalEntries", totalRecords);
+	     return "projectList";
+	 }
+	 @PostMapping("/save3")
+	 public String saveform(@ModelAttribute ProjectList addproject) {
+
+		    try {
+
+		        Connection con = datasource.getConnection();
+
+		        String sql = "INSERT INTO projectmaster (projectcode, projectname, projectlocation, projectdescription, openinglattitude, openinglongitude, ownercode) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+		        PreparedStatement ps = con.prepareStatement(sql);
+		
+		        ps.setInt(1, addproject.getProjectCode());
+		        ps.setString(2, addproject.getProjectName());
+		        ps.setString(3, addproject.getProjectLocation());
+		        ps.setString(4, addproject.getProjectDescription());
+		        ps.setString(5, addproject.getOpeningLattitude());
+		        ps.setString(6, addproject.getOpeningLongitude());
+		        ps.setInt(7, addproject.getOwnerCode());
+
+		        ps.executeUpdate();
+
+		        ps.close();
+		        con.close();
+
+		    } catch (Exception e) {
+		        e.printStackTrace();
+		    }
+
+		    int totalRecords = 0;
+
+		    try {
+
+		        Connection con2 = datasource.getConnection();
+
+		        PreparedStatement ps2 =
+		        con2.prepareStatement("SELECT COUNT(*) FROM projectmaster");
+
+		        ResultSet rs = ps2.executeQuery();
+
+		        if(rs.next()) {
+		            totalRecords = rs.getInt(1);
+		        }
+
+		        rs.close();
+		        ps2.close();
+		        con2.close();
+
+		    } catch (Exception e) {
+		        e.printStackTrace();
+		    }
+
+		    int pageSize = 10;
+
+		    int lastPage =
+		    (int)Math.ceil((double) totalRecords / pageSize);
+
+		    return "redirect:/projectList?page=" + lastPage + "&success=added";
+		}
+
+	    @PostMapping("/updates")
+	    public String update(@ModelAttribute ProjectList addproject) {
+
+	        try {
+	            Connection con = datasource.getConnection();
+
+	            String sql = "update projectmaster set projectname=?, projectlocation=?, projectdescription=?, openinglattitude=?, openinglongitude=?, ownercode=? where projectcode=?";
+	            PreparedStatement ps = con.prepareStatement(sql);
+
+	            ps.setString(1, addproject.getProjectName());
+	            ps.setString(2, addproject.getProjectLocation());
+	            ps.setString(3, addproject.getProjectDescription()); 	
+	            ps.setString(4, addproject.getOpeningLattitude());
+	            ps.setString(5, addproject.getOpeningLongitude());  
+	            ps.setInt(6, addproject.getOwnerCode());
+	            ps.setInt(7, addproject.getProjectCode());
+	            ps.executeUpdate();
+
+	            ps.close();
+	            con.close();
+          System.out.println(addproject.getOwnerCode());
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+
+	        return "redirect:/projectList?success=updated";
+	    }
+
+	    @GetMapping("/delete")
+	    public String delete(@RequestParam("projectCode") Integer projectCode) {
+
+	        try {
+	            Connection con = datasource.getConnection();
+
+	            String sql = "delete from projectmaster where projectcode=?";
+	            PreparedStatement ps = con.prepareStatement(sql);
+
+	            ps.setInt(1, projectCode);
+
+	            ps.executeUpdate();
+
+	            ps.close();
+	            con.close();
+	            System.out.println("Data Deleted Successfully");
+
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+
+	        return "redirect:/projectList?success=deleted";
+	    }
+
+	    @GetMapping("/edit")
+	    public String edit(@RequestParam("projectCode") Integer projectCode, Model model) {
+
+	        ProjectList pl = new ProjectList();
+
+	        try {
+	            Connection con = datasource.getConnection();
+
+	            String sql = "select * from projectmaster where projectcode=?";
+	            PreparedStatement ps = con.prepareStatement(sql);
+
+	            ps.setInt(1, projectCode);
+
+	            var rs = ps.executeQuery();
+
+	            if (rs.next()) {
+	                pl.setProjectCode(rs.getInt("projectCode"));
+	                pl.setProjectName(rs.getString("projectName"));
+	                pl.setProjectLocation(rs.getString("projectLocation"));
+	                pl.setProjectDescription(rs.getString("projectDescription"));
+	                pl.setOpeningLattitude(rs.getString("openingLattitude"));
+	                pl.setOpeningLongitude(rs.getString("openingLongitude"));
+	                pl.setOwnerCode(rs.getInt("ownercode"));
+	            }
+
+	            rs.close();
+	            ps.close();
+	            con.close();
+
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+
+	        
+	        List<OwnerMaster> owners = projectService.getAllOwnerNames();
+	        model.addAttribute("owners", owners);
+
+	       
+	        model.addAttribute("addproject", pl);
+
+	        return "addProject";
+	    }
+	    
+	    @GetMapping("/exportExcel")
+	    public void exportExcel(HttpServletResponse response)
+	    throws Exception {
+
+	    response.setContentType(
+	    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+	    response.setHeader(
+	    "Content-Disposition",
+	    "attachment; filename=Project_List.xlsx");
+
+	    List<ProjectList> list =
+	    projectService.getAllProject();
+
+	    Workbook workbook = new XSSFWorkbook();
+	    Sheet sheet = (Sheet) workbook.createSheet("Projects");
+
+	    Row header = ((org.apache.poi.ss.usermodel.Sheet) sheet).createRow(0);
+
+	    header.createCell(0).setCellValue("S.No");
+	    header.createCell(1).setCellValue("Project Name");
+	    header.createCell(2).setCellValue("Location");
+	    header.createCell(3).setCellValue("Project Description");
+	    header.createCell(4).setCellValue("Lattitude");
+	    header.createCell(5).setCellValue("Longitude");
+	    header.createCell(6).setCellValue("Owner");
+
+	    int rowNum = 1;
+
+	    for(ProjectList p : list){
+
+	    Row row = ((org.apache.poi.ss.usermodel.Sheet) sheet).createRow(rowNum++);
+
+	    row.createCell(0).setCellValue(p.getProjectCode());
+	    row.createCell(1).setCellValue(p.getProjectName());
+	    row.createCell(2).setCellValue(p.getProjectLocation());
+	    row.createCell(3).setCellValue(p.getProjectDescription());
+	    row.createCell(4).setCellValue(p.getOpeningLattitude());
+	    row.createCell(5).setCellValue(p.getOpeningLattitude());
+	    row.createCell(6).setCellValue(p.getOwnerCode());
+
+	    }
+
+	    workbook.write(response.getOutputStream());
+	    workbook.close();
+	    }
+	}
+
+
